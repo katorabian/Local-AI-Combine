@@ -22,4 +22,17 @@ class Test {
         val body = Json.decodeFromString<HealthResponse>(response.bodyAsText())
         assertEquals("ok", body.status)
     }
+
+    @Test
+    fun unknownRouteReturnsErrorBody() = testApplication {
+        application {
+            health()
+        }
+        val response = client.get("/v1/foo/bar")
+        assertEquals(HttpStatusCode.NotFound, response.status)
+
+        val body = Json.decodeFromString<ApiError>(response.bodyAsText())
+        assertEquals("not_found", body.code)
+        assertEquals("Маршрут не найден", body.message)
+    }
 }
