@@ -30,6 +30,36 @@ class LlamaCpp(
             name = "llama-log"
             start()
         }
+        waitUntilReady()
+    }
+
+    private fun waitUntilReady() {
+        val deadline = System.currentTimeMillis() + 180_000
+        val url = URI("http://127.0.0.1:$port/health").toURL()
+
+        while(System.currentTimeMillis() < deadline) {
+            val running = process?: error("Запуск llama.cpp прерван")
+            if (!running.isAlive) {
+                error("llama.cpp завершился до готовности, код ${running.exitValue()}")
+            }
+
+            try {
+                val connection = url.openConnection() as HttpURLConnection
+                connection.connectTimeout = 500
+                connection.readTimeout = 500
+                connection.requestMethod = "GET"
+
+                val code = connection.responseCode
+                connection.disconnect()
+
+                if (code == HttpURLConnection.HTTP_OK) return
+            } catch (_: IOException) {
+
+            }
+            Thread.sleep(300)
+        }
+
+        error("llama.cpp не ответил на /health за 180 сек")
     }
 
     fun stop() {
