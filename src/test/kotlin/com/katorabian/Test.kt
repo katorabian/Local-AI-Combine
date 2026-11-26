@@ -35,4 +35,15 @@ class Test {
         assertEquals("not_found", body.code)
         assertEquals("Маршрут не найден", body.message)
     }
+
+    @Test
+    fun llamaCommandPointsAtModelAndPort() {
+        val exe = "F:\\runtime\\llama.cpp\\llama-server.exe"
+        val model = "F:\\models\\gguf\\Dolphin3.0-Llama3.1-8B-Q8_0.gguf"
+        val command = llamaCommand(exe, model, 8081)
+        assertEquals(exe, command[0])
+        assertEquals("8081", command[command.indexOf("--port") + 1])
+        assertEquals(model, command[command.indexOf("-m") + 1])
+        assertEquals(true, command.contains("--no-webui"))
+    }
 }

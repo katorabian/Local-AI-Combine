@@ -14,9 +14,23 @@ import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 
 fun main() {
-    embeddedServer(Netty, host = "127.0.0.1", port = 8080) {
+    val llama = LlamaCpp(
+        exe = "F:\\runtime\\llama.cpp\\llama-server.exe",
+        model = "F:\\models\\gguf\\Dolphin3.0-Llama3.1-8B-Q8_0.gguf",
+        port = 8081
+    )
+    Runtime.getRuntime().addShutdownHook(Thread {
+        runCatching { llama.stop() }
+    })
+
+    val server = embeddedServer(Netty, host = "127.0.0.1", port = 8080) {
         health()
-    }.start(wait = true)
+    }
+    server.start(wait = false)
+
+    llama.start()
+    println("llama.cpp готов")
+    Thread.currentThread().join()
 }
 
 fun Application.health() {
